@@ -1,0 +1,532 @@
+{
+  "name": "RAG Agent workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1ZRfhddGvVHxBAQUC_h_XFG2k1Xa8aD8s",
+          "mode": "list",
+          "cachedResultName": "agentic-rag",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1ZRfhddGvVHxBAQUC_h_XFG2k1Xa8aD8s"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1a25d72f-02cc-4318-8746-37a8f81e9f6d",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GfDaQtpghPLMtUNG",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "7a27a6d0-1b58-4e19-92b0-e1fb75b7b049",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "GfDaQtpghPLMtUNG",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "473bd065-bb7e-4642-9324-4ddad5de0889",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "m2BYixEirSWd8LFz",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        288,
+        208
+      ],
+      "id": "881e44b8-e1c9-47dd-b12c-447d7aa53eb7",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "Bzf5zvd6XJtfPPKw",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        208
+      ],
+      "id": "d33709ee-0a1d-452a-9601-c57dd61a30e0",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 3000,
+        "chunkOverlap": 250,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        544,
+        432
+      ],
+      "id": "6a28b836-cf1c-4ab3-86f8-f891e094f4d5",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -160,
+        576
+      ],
+      "id": "ac6f4f20-7f0e-4840-bf97-d3c3fe95b8a7",
+      "name": "When chat message received",
+      "webhookId": "e06b4223-b83c-48dd-964b-7d4db9fda439"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        48,
+        576
+      ],
+      "id": "d5449908-be7e-4b7d-b25c-488c69a4d545",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        784
+      ],
+      "id": "6c624903-3fbb-446a-bd3c-2f1d461c1af9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Bzf5zvd6XJtfPPKw",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        64,
+        784
+      ],
+      "id": "13730f59-6191-4a60-a510-513af5a191e3",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        304,
+        992
+      ],
+      "id": "07848a3a-82d9-4663-8825-00b2afca066c",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "Bzf5zvd6XJtfPPKw",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Use this tool to answer questions related to finance about companies like Infosys, Google etc",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 5,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        784
+      ],
+      "id": "c77b639a-de2e-4805-bebd-18c600500505",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "m2BYixEirSWd8LFz",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4c94dffc-8720-46bd-b77d-301ca0eecf62",
+              "name": "user_question",
+              "value": "={{ $('When chat message received').item.json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "ad0a143d-7eb3-4fa3-b2df-7a8f60fb6e09",
+              "name": "ai_response",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        576
+      ],
+      "id": "e734191d-81ed-404e-9f82-4de67a9c90cc",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "tableId": "response",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_question",
+              "fieldValue": "={{ $json.user_question }}"
+            },
+            {
+              "fieldId": "answer",
+              "fieldValue": "={{ $json.ai_response }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        608,
+        576
+      ],
+      "id": "90836abe-63eb-4f5c-a684-b11ae8dbfcc9",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "m2BYixEirSWd8LFz",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "nithusarin@gmail.com",
+        "subject": "AI response from Chatbot",
+        "emailType": "text",
+        "message": "=Hi Nithu,\n\nThis is the response from the chat bot generated at {{ $now }}\n\nQuestion:{{ $json.user_question }}\n\nResponse:{{ $json.answer }}\n\nThanks & regards,\nD",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        576
+      ],
+      "id": "0d07729f-d99b-4895-97a9-3459b864d7e9",
+      "name": "Send a message",
+      "webhookId": "9bdfff82-5630-48c4-91a9-caaadb3aba77",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "p93quVclwX2zO3ub",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AATPR6940",
+          "mode": "list",
+          "cachedResultName": "agent-notifications"
+        },
+        "text": "=Hi,\n\nBelow is the answer to your question at {{ $now }}\n\nQuestion : {{ $('When chat message received').item.json.chatInput }}\n\nAnswer:{{ $('AI Agent').item.json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1024,
+        576
+      ],
+      "id": "7f8cbea0-c0d4-42c8-9a6a-83d26ba59ac5",
+      "name": "Send a message1",
+      "webhookId": "0a1903e5-82ed-4b9c-9b75-f2f8a5ecdcec",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "xe0PV4v9GrITMnkV",
+          "name": "Slack account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "717d0394-caed-464e-94bc-2936c7361842",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "352805dac0c04d291a63b31237f80c8d211b9f1a4d5f2bf5ee5a6e667ac991a9"
+  },
+  "id": "V74oC652qYz7LVqCC397H",
+  "tags": []
+}
